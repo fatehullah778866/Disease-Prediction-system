@@ -1,0 +1,742 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liver Disease Dataset Report</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --danger-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .chart-container {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        canvas {
+            max-height: 400px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        table th, table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        table tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .insight-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            z-index: 99;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .back-home-btn {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            text-align: center;
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        .back-home-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="root">
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button onclick="topFunction()" id="scrollToTopBtn" class="scroll-to-top" title="Go to top">↑</button>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Define the home URL for JavaScript -->
+    <script>
+        const homeUrl = "{% url 'liver:home_liver' %}";
+    </script>
+
+    {% verbatim %}
+    <script>
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data and render the page
+            loadData();
+            
+            // Scroll to top button functionality
+            window.onscroll = function() {
+                scrollFunction();
+            };
+        });
+
+        function scrollFunction() {
+            const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        }
+
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        // Simulate loading file data (in a real app, this would fetch from a server)
+        function loadFileData(filename) {
+            // In a real implementation, fetch the CSV file from a Django endpoint
+            console.log(`Loading file: ${filename}`);
+            return "";
+        }
+
+        // Process and clean data
+        function processAndCleanData(rawData) {
+            return rawData
+                .filter(row => row['Age'] && row['target'] !== '') // Discard empty/invalid rows
+                .map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => {
+                        let value = row[key];
+                        // Convert numeric fields
+                        const numericFields = ['Age', 'Total_Bilirubin', 'Direct_Bilirubin', 'Alkaline_Phosphotase', 
+                                             'Alamine_Aminotransferase', 'Aspartate_Aminotransferase', 'Total_Protiens', 
+                                             'Albumin', 'Albumin_and_Globulin_Ratio'];
+                        if (numericFields.includes(key)) {
+                            value = parseFloat(value);
+                            if (isNaN(value)) value = null;
+                        }
+                        // Convert binary fields
+                        const binaryFields = ['Gender', 'target'];
+                        if (binaryFields.includes(key)) {
+                            value = parseInt(value, 10);
+                            if (isNaN(value)) value = null;
+                        }
+                        cleaned[key] = value;
+                    });
+                    return cleaned;
+                })
+                .filter(row => row['target'] !== null); // Ensure valid target
+        }
+
+        // Data preparation functions
+        function prepareAgeDistribution(data) {
+            const bins = Array(10).fill(0); // 10-year bins from 0 to 100
+            data.forEach(row => {
+                const age = row['Age'];
+                if (age && age >= 0 && age <= 100) {
+                    const binIndex = Math.floor(age / 10);
+                    bins[binIndex]++;
+                }
+            });
+            return bins.map((count, index) => ({
+                ageRange: `${index * 10}-${(index + 1) * 10}`,
+                count
+            }));
+        }
+
+        function prepareGenderLiverDisease(data) {
+            const counts = { Male: { Disease: 0, NoDisease: 0 }, Female: { Disease: 0, NoDisease: 0 } };
+            data.forEach(row => {
+                const gender = row['Gender'] === 0 ? 'Male' : 'Female';
+                const diagnosis = row['target'] === 1 ? 'Disease' : 'NoDisease';
+                counts[gender][diagnosis]++;
+            });
+            return [
+                { name: 'Male', Disease: counts.Male.Disease, NoDisease: counts.Male.NoDisease },
+                { name: 'Female', Disease: counts.Female.Disease, NoDisease: counts.Female.NoDisease }
+            ];
+        }
+
+        function prepareBilirubinVsAlbumin(data) {
+            // Sampling up to 200 points for performance
+            const sampled = data
+                .filter(row => row['Total_Bilirubin'] && row['Albumin'])
+                .slice(0, 200);
+            return sampled.map(row => ({
+                Total_Bilirubin: row['Total_Bilirubin'],
+                Albumin: row['Albumin'],
+                Diagnosis: row['target'] === 1 ? 'Liver Disease' : 'No Disease'
+            }));
+        }
+
+        function prepareEnzymeLevels(data) {
+            const enzymes = [
+                'Alkaline_Phosphotase',
+                'Alamine_Aminotransferase',
+                'Aspartate_Aminotransferase'
+            ];
+            const counts = enzymes.map(enzyme => ({
+                enzyme,
+                avgLevel: data.reduce((sum, row) => sum + (row[enzyme] || 0), 0) / data.length
+            }));
+            return counts;
+        }
+
+        function prepareProteinLevels(data) {
+            const proteins = ['Total_Protiens', 'Albumin'];
+            const counts = proteins.map(protein => ({
+                protein,
+                avgLevel: data.reduce((sum, row) => sum + (row[protein] || 0), 0) / data.length
+            }));
+            return counts;
+        }
+
+        // Render charts using Chart.js
+        function renderAgeDistributionChart(ageData) {
+            const ctx = document.getElementById('ageDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ageData.map(d => d.ageRange),
+                    datasets: [{
+                        label: 'Number of Patients',
+                        data: ageData.map(d => d.count),
+                        backgroundColor: '#4db6ac',
+                        borderColor: '#4db6ac',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Age Range (Years)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderGenderLiverDiseaseChart(genderData) {
+            const ctx = document.getElementById('genderLiverDiseaseChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: genderData.map(d => d.name),
+                    datasets: [
+                        {
+                            label: 'Liver Disease',
+                            data: genderData.map(d => d.Disease),
+                            backgroundColor: '#e57373',
+                            borderColor: '#e57373',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'No Disease',
+                            data: genderData.map(d => d.NoDisease),
+                            backgroundColor: '#4db6ac',
+                            borderColor: '#4db6ac',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gender',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true,
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderBilirubinVsAlbuminChart(bilirubinAlbuminData) {
+            const ctx = document.getElementById('bilirubinAlbuminChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Liver Disease',
+                            data: bilirubinAlbuminData.filter(d => d.Diagnosis === 'Liver Disease').map(d => ({
+                                x: d.Total_Bilirubin,
+                                y: d.Albumin
+                            })),
+                            backgroundColor: '#e57373',
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'No Disease',
+                            data: bilirubinAlbuminData.filter(d => d.Diagnosis === 'No Disease').map(d => ({
+                                x: d.Total_Bilirubin,
+                                y: d.Albumin
+                            })),
+                            backgroundColor: '#4db6ac',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Total Bilirubin (mg/dL)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Albumin (g/dL)',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderEnzymeLevelsChart(enzymeData) {
+            const ctx = document.getElementById('enzymeLevelsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: enzymeData.map(d => d.enzyme),
+                    datasets: [{
+                        label: 'Average Enzyme Level',
+                        data: enzymeData.map(d => d.avgLevel),
+                        backgroundColor: '#4db6ac',
+                        borderColor: '#4db6ac',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Liver Enzyme',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Average Level (IU/L)',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderProteinLevelsChart(proteinData) {
+            const ctx = document.getElementById('proteinLevelsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: proteinData.map(d => d.protein),
+                    datasets: [{
+                        label: 'Average Protein Level',
+                        data: proteinData.map(d => d.avgLevel),
+                        backgroundColor: '#4db6ac',
+                        borderColor: '#4db6ac',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Protein Type',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Average Level (g/dL)',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        // Load data and render the page
+        function loadData() {
+            // Simulate loading data (in a real app, fetch from a Django endpoint, e.g., fetch('/api/liver-data'))
+            setTimeout(() => {
+                const sampleData = [
+                    { Age: "65", Gender: "0", Total_Bilirubin: "0.7", Direct_Bilirubin: "0.1", Alkaline_Phosphotase: "187", Alamine_Aminotransferase: "16", Aspartate_Aminotransferase: "18", Total_Protiens: "6.8", Albumin: "3.3", Albumin_and_Globulin_Ratio: "0.9", target: "1" },
+                    { Age: "62", Gender: "1", Total_Bilirubin: "10.9", Direct_Bilirubin: "5.5", Alkaline_Phosphotase: "699", Alamine_Aminotransferase: "64", Aspartate_Aminotransferase: "100", Total_Protiens: "7.5", Albumin: "3.2", Albumin_and_Globulin_Ratio: "0.74", target: "1" },
+                    { Age: "17", Gender: "1", Total_Bilirubin: "0.9", Direct_Bilirubin: "0.3", Alkaline_Phosphotase: "202", Alamine_Aminotransferase: "22", Aspartate_Aminotransferase: "19", Total_Protiens: "7.4", Albumin: "4.1", Albumin_and_Globulin_Ratio: "1.2", target: "0" }
+                ];
+                
+                const cleanedData = processAndCleanData(sampleData);
+                renderPage(cleanedData);
+            }, 1500);
+        }
+
+        // Render the complete page
+        function renderPage(data) {
+            const ageData = prepareAgeDistribution(data);
+            const genderData = prepareGenderLiverDisease(data);
+            const bilirubinAlbuminData = prepareBilirubinVsAlbumin(data);
+            const enzymeData = prepareEnzymeLevels(data);
+            const proteinData = prepareProteinLevels(data);
+
+            const root = document.getElementById('root');
+            root.innerHTML = `
+                <div class="container my-4">
+                   
+
+                    <!-- Header Section -->
+                    <header class="header text-center mb-5">
+                        <h1 class="display-4 fw-bold mb-3">Liver Disease Dataset Report</h1>
+                        <p class="lead">
+                            A comprehensive analysis of the Liver Disease dataset, featuring patient demographics, liver function tests, and diagnostic indicators for liver disease prediction.
+                        </p>
+                    </header>
+
+                    <!-- Summary Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Dataset Summary</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text mb-3">
+                                The Liver Disease dataset contains <strong>583 patient records</strong> with <strong>11 clinical attributes</strong>, designed for predicting liver disease. It includes:
+                            </p>
+                            <ul class="mb-3">
+                                <li>Demographic information (Age, Gender).</li>
+                                <li>Liver function tests (Bilirubin levels, Alkaline Phosphatase, Aminotransferases).</li>
+                                <li>Protein measurements (Total Proteins, Albumin, Albumin/Globulin ratio).</li>
+                                <li>Outcome variable: Diagnosis (0 = No Liver Disease, 1 = Liver Disease).</li>
+                            </ul>
+                            <p class="card-text">
+                                This dataset is valuable for developing models to detect liver disease based on blood test results and understanding key indicators of liver health.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Column Descriptions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Column Descriptions</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Column Name</th>
+                                            <th>Description</th>
+                                            <th>Data Type</th>
+                                            <th>Example Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>Age</td><td>Patient's age in years</td><td>Integer</td><td>65</td></tr>
+                                        <tr><td>Gender</td><td>0 = Male, 1 = Female</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>Total_Bilirubin</td><td>Total bilirubin in mg/dL</td><td>Float</td><td>0.7</td></tr>
+                                        <tr><td>Direct_Bilirubin</td><td>Conjugated bilirubin in mg/dL</td><td>Float</td><td>0.1</td></tr>
+                                        <tr><td>Alkaline_Phosphotase</td><td>Alkaline phosphatase level in IU/L</td><td>Integer</td><td>187</td></tr>
+                                        <tr><td>Alamine_Aminotransferase</td><td>ALT (SGPT) level in IU/L</td><td>Integer</td><td>16</td></tr>
+                                        <tr><td>Aspartate_Aminotransferase</td><td>AST (SGOT) level in IU/L</td><td>Integer</td><td>18</td></tr>
+                                        <tr><td>Total_Protiens</td><td>Total serum protein in g/dL</td><td>Float</td><td>6.8</td></tr>
+                                        <tr><td>Albumin</td><td>Albumin level in g/dL</td><td>Float</td><td>3.3</td></tr>
+                                        <tr><td>Albumin_and_Globulin_Ratio</td><td>A/G ratio</td><td>Float</td><td>0.9</td></tr>
+                                        <tr><td>target</td><td>Liver disease diagnosis (0 = No, 1 = Yes)</td><td>Binary</td><td>1</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Visualizations</h2>
+                        </div>
+                        <div class="card-body">
+                            <!-- Age Distribution -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Age Distribution of Patients</h3>
+                                <p class="text-muted mb-3">This chart shows the distribution of patient ages, binned into 10-year intervals.</p>
+                                <div class="chart-container">
+                                    <canvas id="ageDistributionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Liver Disease Prevalence by Gender -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Liver Disease Prevalence by Gender</h3>
+                                <p class="text-muted mb-3">This chart compares liver disease diagnosis rates between male and female patients.</p>
+                                <div class="chart-container">
+                                    <canvas id="genderLiverDiseaseChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Bilirubin vs. Albumin -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Total Bilirubin vs. Albumin</h3>
+                                <p class="text-muted mb-3">This scatter plot explores the relationship between bilirubin and albumin levels, colored by diagnosis.</p>
+                                <div class="chart-container">
+                                    <canvas id="bilirubinAlbuminChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Enzyme Levels -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Average Liver Enzyme Levels</h3>
+                                <p class="text-muted mb-3">This chart shows average levels of key liver enzymes across all patients.</p>
+                                <div class="chart-container">
+                                    <canvas id="enzymeLevelsChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Protein Levels -->
+                            <div class="mb-3">
+                                <h3 class="h5 fw-bold mb-2">Average Protein Levels</h3>
+                                <p class="text-muted mb-3">This chart shows average levels of total proteins and albumin.</p>
+                                <div class="chart-container">
+                                    <canvas id="proteinLevelsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Insights -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Key Insights</h2>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item insight-item">The dataset shows elevated bilirubin levels (both total and direct) are strongly associated with liver disease, as seen in PatientID 2 (Total_Bilirubin: 10.9, Direct_Bilirubin: 5.5).</li>
+                                <li class="list-group-item insight-item">Liver enzyme levels (Alkaline Phosphatase, ALT, AST) tend to be significantly higher in patients with liver disease, indicating liver cell damage.</li>
+                                <li class="list-group-item insight-item">Albumin levels and A/G ratio are typically lower in patients with liver disease, reflecting impaired protein synthesis by the liver.</li>
+                                <li class="list-group-item insight-item">The gender distribution shows that males in this dataset have a higher prevalence of liver disease compared to females.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Conclusion -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Conclusion</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                The Liver Disease dataset provides essential clinical markers for assessing liver health and detecting liver disease. The visualizations reveal clear patterns in bilirubin levels, liver enzymes, and protein measurements that differentiate healthy patients from those with liver disease. This dataset is particularly valuable for healthcare professionals and researchers developing diagnostic tools for liver conditions, as it captures the key biochemical indicators of liver function. The strong correlations between these markers and liver disease diagnosis make this dataset excellent for predictive modeling and clinical decision support systems.
+                            </p>
+                        </div>
+                    </div>
+                     <!-- Back to Home Button -->
+                    <a href="${homeUrl}" class="back-home-btn">Back to Home</a>
+                </div>
+            `;
+
+            // Render all charts
+            renderAgeDistributionChart(ageData);
+            renderGenderLiverDiseaseChart(genderData);
+            renderBilirubinVsAlbuminChart(bilirubinAlbuminData);
+            renderEnzymeLevelsChart(enzymeData);
+            renderProteinLevelsChart(proteinData);
+        }
+    </script>
+    {% endverbatim %}
+</body>
+</html>

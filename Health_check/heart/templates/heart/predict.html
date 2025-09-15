@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --danger-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+            transform: translateY(-5px);
+        }
+        
+        .form-control, .form-select {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--dark-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #495057;
+            transform: translateY(-2px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 0 0 15px 15px;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(74, 111, 165, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .info-section {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <!-- Header -->
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3"><i class="fas fa-heartbeat me-2"></i> Heart Disease Risk Prediction</h1>
+            <p class="lead">Assess your risk factors and get an instant prediction</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Information Section -->
+                <div class="info-section glass-card mb-4">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="feature-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <h5>Early Detection</h5>
+                            <p class="text-muted">Identify potential risks before symptoms appear</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h5>Clinical Accuracy</h5>
+                            <p class="text-muted">Powered by machine learning algorithms</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h5>Data Privacy</h5>
+                            <p class="text-muted">Your information is always secure</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Prediction Form -->
+                <div class="glass-card p-4 p-md-5">
+                    <h2 class="text-center mb-4">Risk Assessment Form</h2>
+                    <p class="text-muted text-center mb-4">Please provide accurate information for the most reliable prediction</p>
+                    
+                    {% comment %} {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %} {% endcomment %}
+                    
+                    <form id="predictionForm" method="POST" action="{% url 'heart:predict_heart' %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label">Age (years)</label>
+                                <input type="number" class="form-control" id="age" name="age" min="1" max="120" required>
+                                <div class="invalid-feedback">Please enter a valid age (1-120).</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="" selected disabled>Select gender</option>
+                                    <option value="1">Male</option>
+                                    <option value="0">Female</option>
+                                </select>
+                                <div class="invalid-feedback">Please select your gender.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="chest_pain" class="form-label">Chest Pain Type</label>
+                                <select class="form-select" id="chest_pain" name="chest_pain" required>
+                                    <option value="" selected disabled>Select chest pain type</option>
+                                    <option value="0">Typical angina</option>
+                                    <option value="1">Atypical angina</option>
+                                    <option value="2">Non-anginal pain</option>
+                                    <option value="3">Asymptomatic</option>
+                                </select>
+                                <div class="invalid-feedback">Please select chest pain type.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="resting_bp" class="form-label">Resting Blood Pressure (mm Hg)</label>
+                                <input type="number" class="form-control" id="resting_bp" name="resting_bp" min="50" max="250" required>
+                                <div class="invalid-feedback">Please enter valid blood pressure (50-250 mm Hg).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cholesterol" class="form-label">Serum Cholesterol (mg/dl)</label>
+                                <input type="number" class="form-control" id="cholesterol" name="cholesterol" min="100" max="600" required>
+                                <div class="invalid-feedback">Please enter valid cholesterol level (100-600 mg/dl).</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="fasting_bs" class="form-label">Fasting Blood Sugar > 120 mg/dl</label>
+                                <select class="form-select" id="fasting_bs" name="fasting_bs" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                                <div class="invalid-feedback">Please select an option.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="resting_ecg" class="form-label">Resting ECG Results</label>
+                                <select class="form-select" id="resting_ecg" name="resting_ecg" required>
+                                    <option value="" selected disabled>Select ECG result</option>
+                                    <option value="0">Normal</option>
+                                    <option value="1">ST-T wave abnormality</option>
+                                    <option value="2">Probable or definite left ventricular hypertrophy</option>
+                                </select>
+                                <div class="invalid-feedback">Please select ECG result.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="max_hr" class="form-label">Maximum Heart Rate Achieved</label>
+                                <input type="number" class="form-control" id="max_hr" name="max_hr" min="60" max="220" required>
+                                <div class="invalid-feedback">Please enter valid heart rate (60-220).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="exercise_angina" class="form-label">Exercise Induced Angina</label>
+                                <select class="form-select" id="exercise_angina" name="exercise_angina" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                                <div class="invalid-feedback">Please select an option.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="oldpeak" class="form-label">ST Depression Induced by Exercise</label>
+                                <input type="number" step="0.1" class="form-control" id="oldpeak" name="oldpeak" min="0" max="10" required>
+                                <div class="invalid-feedback">Please enter valid value (0-10).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="slope" class="form-label">Slope of Peak Exercise ST Segment</label>
+                                <select class="form-select" id="slope" name="slope" required>
+                                    <option value="" selected disabled>Select slope</option>
+                                    <option value="0">Upsloping</option>
+                                    <option value="1">Flat</option>
+                                    <option value="2">Downsloping</option>
+                                </select>
+                                <div class="invalid-feedback">Please select slope.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="num_vessels" class="form-label">Number of Major Vessels (0-3)</label>
+                                <input type="number" class="form-control" id="num_vessels" name="num_vessels" min="0" max="3" required>
+                                <div class="invalid-feedback">Please enter number of vessels (0-3).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calculator me-2"></i> Calculate Risk
+                            </button>
+                            <a href="{% url 'heart:details' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-eraser me-2"></i> Dataset Details
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Disclaimer -->
+                <div class="mt-4 text-center text-muted small">
+                    <p>This tool is for informational purposes only and does not replace professional medical advice. 
+                    Always consult with a healthcare provider for diagnosis and treatment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Show loading overlay on form submission
+            $('#predictionForm').on('submit', function() {
+                $('#loadingOverlay').css('display', 'flex');
+            });
+
+            // Form validation
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+            })();
+        });
+    </script>
+</body>
+</html>

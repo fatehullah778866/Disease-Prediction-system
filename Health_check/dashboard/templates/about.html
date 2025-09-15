@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}About - Health Check AI{% endblock %}
+
+{% block content %}
+{% load static %}
+<section class="container my-5">
+    <div class="glass-card p-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">About Health Check AI</h1>
+                <p class="lead">Revolutionizing healthcare through artificial intelligence and machine learning.</p>
+                <p>Health Check AI is a cutting-edge platform that leverages advanced machine learning algorithms to predict multiple diseases based on symptoms, medical history, and other health indicators.</p>
+                <p>Our mission is to make healthcare more accessible and preventive by providing early warnings and health insights to users worldwide.</p>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="AI in Healthcare" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text text-white">Our Expert Team</h2>
+        <p class="lead text text-white">Meet the brilliant minds behind Health Check AI</p>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="glass-card text-center p-4 h-100">
+                {% comment %} <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Team Member" class="rounded-circle mb-3" width="150"> {% endcomment %}
+                <img src="{% static "dashboard/images/Fateh.png" %}" alt="Team Member" class="rounded-circle mb-3" width="150">
+                <h4>Dr. Fateh ullah</h4>
+                <p class="text-primary">Chief Medical Officer</p>
+                <p>Board-certified physician with 15 years of clinical experience and expertise in AI healthcare applications.</p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="glass-card text-center p-4 h-100">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Team Member" class="rounded-circle mb-3" width="150">
+                <h4>Michael Chen</h4>
+                <p class="text-primary">Lead Data Scientist</p>
+                <p>Machine learning expert with PhD in Computer Science and specialization in healthcare predictive models.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="container my-5">
+    <div class="glass-card p-5 text-center">
+        <div class="row">
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="display-4 fw-bold text-primary">10K+</h2>
+                <p class="lead">Users Served</p>
+            </div>
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="display-4 fw-bold text-primary">95%</h2>
+                <p class="lead">Accuracy Rate</p>
+            </div>
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="display-4 fw-bold text-primary">15+</h2>
+                <p class="lead">Diseases Predicted</p>
+            </div>
+            <div class="col-md-3">
+                <h2 class="display-4 fw-bold text-primary">24/7</h2>
+                <p class="lead">Availability</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

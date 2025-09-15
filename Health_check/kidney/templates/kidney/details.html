@@ -1,0 +1,798 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronic Kidney Disease Dataset Report</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --danger-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .chart-container {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        canvas {
+            max-height: 400px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        table th, table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        table tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .insight-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            z-index: 99;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .back-home-btn {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            text-align: center;
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        .back-home-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="root">
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button onclick="topFunction()" id="scrollToTopBtn" class="scroll-to-top" title="Go to top">↑</button>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Define the home URL for JavaScript -->
+    <script>
+        const homeUrl = "{% url 'kidney:kidney_back' %}";
+    </script>
+
+    {% verbatim %}
+    <script>
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data and render the page
+            loadData();
+            
+            // Scroll to top button functionality
+            window.onscroll = function() {
+                scrollFunction();
+            };
+        });
+
+        function scrollFunction() {
+            const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        }
+
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        // Simulate loading file data (in a real app, this would fetch from a server)
+        function loadFileData(filename) {
+            // In a real implementation, fetch the CSV file from a Django endpoint
+            console.log(`Loading file: ${filename}`);
+            return "";
+        }
+
+        // Process and clean data
+        function processAndCleanData(rawData) {
+            return rawData
+                .filter(row => row['PatientID'] && row['Diagnosis'] !== '') // Discard empty/invalid rows
+                .map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => {
+                        let value = row[key];
+                        // Convert numeric fields
+                        const numericFields = ['Age', 'BMI', 'SystolicBP', 'DiastolicBP', 'FastingBloodSugar', 'HbA1c', 'SerumCreatinine', 'BUNLevels', 'GFR', 'ProteinInUrine', 'ACR', 'SerumElectrolytesSodium', 'SerumElectrolytesPotassium', 'SerumElectrolytesCalcium', 'SerumElectrolytesPhosphorus', 'HemoglobinLevels', 'CholesterolTotal', 'CholesterolLDL', 'CholesterolHDL', 'CholesterolTriglycerides', 'FatigueLevels', 'NauseaVomiting', 'MuscleCramps', 'Itching', 'QualityOfLifeScore', 'MedicalCheckupsFrequency', 'MedicationAdherence', 'HealthLiteracy'];
+                        if (numericFields.includes(key)) {
+                            value = parseFloat(value);
+                            if (isNaN(value)) value = null;
+                        }
+                        // Convert binary fields
+                        const binaryFields = ['Gender', 'Smoking', 'FamilyHistoryKidneyDisease', 'FamilyHistoryHypertension', 'FamilyHistoryDiabetes', 'PreviousAcuteKidneyInjury', 'UrinaryTractInfections', 'ACEInhibitors', 'Diuretics', 'NSAIDsUse', 'Statins', 'AntidiabeticMedications', 'Edema', 'HeavyMetalsExposure', 'OccupationalExposureChemicals', 'Diagnosis'];
+                        if (binaryFields.includes(key)) {
+                            value = parseInt(value, 10);
+                            if (isNaN(value)) value = null;
+                        }
+                        cleaned[key] = value;
+                    });
+                    return cleaned;
+                })
+                .filter(row => row['Diagnosis'] !== null); // Ensure valid Diagnosis
+        }
+
+        // Data preparation functions
+        function prepareAgeDistribution(data) {
+            const bins = Array(10).fill(0); // 10-year bins from 20 to 100
+            data.forEach(row => {
+                const age = row['Age'];
+                if (age && age >= 20 && age <= 100) {
+                    const binIndex = Math.floor((age - 20) / 10);
+                    bins[binIndex]++;
+                }
+            });
+            return bins.map((count, index) => ({
+                ageRange: `${20 + index * 10}-${20 + (index + 1) * 10}`,
+                count
+            }));
+        }
+
+        function prepareGenderCKD(data) {
+            const counts = { Male: { CKD: 0, NoCKD: 0 }, Female: { CKD: 0, NoCKD: 0 } };
+            data.forEach(row => {
+                const gender = row['Gender'] === 0 ? 'Male' : 'Female';
+                const diagnosis = row['Diagnosis'] === 1 ? 'CKD' : 'NoCKD';
+                counts[gender][diagnosis]++;
+            });
+            return [
+                { name: 'Male', CKD: counts.Male.CKD, NoCKD: counts.Male.NoCKD },
+                { name: 'Female', CKD: counts.Female.CKD, NoCKD: counts.Female.NoCKD }
+            ];
+        }
+
+        function prepareGFRvsCreatinine(data) {
+            // Sampling up to 200 points for performance
+            const sampled = data
+                .filter(row => row['GFR'] && row['SerumCreatinine'])
+                .slice(0, 200);
+            return sampled.map(row => ({
+                GFR: row['GFR'],
+                SerumCreatinine: row['SerumCreatinine'],
+                Diagnosis: row['Diagnosis'] === 1 ? 'CKD' : 'No CKD'
+            }));
+        }
+
+        function prepareRiskFactors(data) {
+            const factors = [
+                'Smoking',
+                'FamilyHistoryKidneyDisease',
+                'FamilyHistoryHypertension',
+                'FamilyHistoryDiabetes'
+            ];
+            const counts = factors.map(factor => ({
+                factor,
+                prevalence: data.filter(row => row[factor] === 1).length
+            }));
+            return counts;
+        }
+
+        function prepareQoLbyAge(data) {
+            const bins = {};
+            data.forEach(row => {
+                const age = row['Age'];
+                const qol = row['QualityOfLifeScore'];
+                if (age && qol) {
+                    const bin = Math.floor(age / 10) * 10;
+                    if (!bins[bin]) bins[bin] = { sum: 0, count: 0 };
+                    bins[bin].sum += qol;
+                    bins[bin].count++;
+                }
+            });
+            return Object.keys(bins)
+                .map(bin => ({
+                    age: parseInt(bin),
+                    averageQoL: bins[bin].sum / bins[bin].count
+                }))
+                .sort((a, b) => a.age - b.age);
+        }
+
+        // Render charts using Chart.js
+        function renderAgeDistributionChart(ageData) {
+            const ctx = document.getElementById('ageDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ageData.map(d => d.ageRange),
+                    datasets: [{
+                        label: 'Number of Patients',
+                        data: ageData.map(d => d.count),
+                        backgroundColor: '#4db6ac',
+                        borderColor: '#4db6ac',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Age Range (Years)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderGenderCKDChart(genderData) {
+            const ctx = document.getElementById('genderCKDChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: genderData.map(d => d.name),
+                    datasets: [
+                        {
+                            label: 'CKD',
+                            data: genderData.map(d => d.CKD),
+                            backgroundColor: '#e57373',
+                            borderColor: '#e57373',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'No CKD',
+                            data: genderData.map(d => d.NoCKD),
+                            backgroundColor: '#4db6ac',
+                            borderColor: '#4db6ac',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gender',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true,
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderGFRvsCreatinineChart(gfrCreatinineData) {
+            const ctx = document.getElementById('gfrCreatinineChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'CKD',
+                            data: gfrCreatinineData.filter(d => d.Diagnosis === 'CKD').map(d => ({
+                                x: d.SerumCreatinine,
+                                y: d.GFR
+                            })),
+                            backgroundColor: '#e57373',
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'No CKD',
+                            data: gfrCreatinineData.filter(d => d.Diagnosis === 'No CKD').map(d => ({
+                                x: d.SerumCreatinine,
+                                y: d.GFR
+                            })),
+                            backgroundColor: '#4db6ac',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Serum Creatinine (mg/dL)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'GFR (mL/min)',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderRiskFactorsChart(riskFactorData) {
+            const ctx = document.getElementById('riskFactorsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: riskFactorData.map(d => d.factor),
+                    datasets: [{
+                        label: 'Prevalence',
+                        data: riskFactorData.map(d => d.prevalence),
+                        backgroundColor: '#4db6ac',
+                        borderColor: '#4db6ac',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Risk Factor',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderQoLbyAgeChart(qolData) {
+            const ctx = document.getElementById('qolAgeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: qolData.map(d => d.age),
+                    datasets: [{
+                        label: 'Average QoL Score',
+                        data: qolData.map(d => d.averageQoL),
+                        borderColor: '#4db6ac',
+                        backgroundColor: 'rgba(77, 182, 172, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Age (Years)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Average QoL Score',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        // Load data and render the page
+        function loadData() {
+            // Simulate loading data (in a real app, fetch from a Django endpoint, e.g., fetch('/api/kidney-data'))
+            setTimeout(() => {
+                const sampleData = [
+                    { PatientID: "1", Age: "71", Gender: "0", Diagnosis: "1", GFR: "45.70", SerumCreatinine: "4.96", QualityOfLifeScore: "76.08", Smoking: "0", FamilyHistoryKidneyDisease: "0", FamilyHistoryHypertension: "1", FamilyHistoryDiabetes: "0" },
+                    { PatientID: "2", Age: "34", Gender: "1", Diagnosis: "1", GFR: "38.20", SerumCreatinine: "3.45", QualityOfLifeScore: "65.30", Smoking: "1", FamilyHistoryKidneyDisease: "0", FamilyHistoryHypertension: "0", FamilyHistoryDiabetes: "1" },
+                    { PatientID: "3", Age: "45", Gender: "0", Diagnosis: "0", GFR: "92.10", SerumCreatinine: "0.95", QualityOfLifeScore: "88.50", Smoking: "0", FamilyHistoryKidneyDisease: "0", FamilyHistoryHypertension: "0", FamilyHistoryDiabetes: "0" }
+                ];
+                
+                const cleanedData = processAndCleanData(sampleData);
+                renderPage(cleanedData);
+            }, 1500);
+        }
+
+        // Render the complete page
+        function renderPage(data) {
+            const ageData = prepareAgeDistribution(data);
+            const genderData = prepareGenderCKD(data);
+            const gfrCreatinineData = prepareGFRvsCreatinine(data);
+            const riskFactorData = prepareRiskFactors(data);
+            const qolData = prepareQoLbyAge(data);
+
+            const root = document.getElementById('root');
+            root.innerHTML = `
+                <div class="container my-4">
+                   
+
+                    <!-- Header Section -->
+                    <header class="header text-center mb-5">
+                        <h1 class="display-4 fw-bold mb-3">Chronic Kidney Disease Dataset Report</h1>
+                        <p class="lead">
+                            A comprehensive analysis of the Chronic Kidney Disease (CKD) dataset, featuring patient demographics, clinical measurements, and risk factors for CKD prediction.
+                        </p>
+                    </header>
+
+                    <!-- Summary Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Dataset Summary</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text mb-3">
+                                The Chronic Kidney Disease dataset contains <strong>1,659 patient records</strong> with <strong>56 attributes</strong>, designed for predicting CKD. It includes:
+                            </p>
+                            <ul class="mb-3">
+                                <li>Demographic information (e.g., Age, Gender, Ethnicity).</li>
+                                <li>Lifestyle factors (e.g., BMI, Smoking, Physical Activity).</li>
+                                <li>Clinical measurements (e.g., GFR, Serum Creatinine, Blood Pressure).</li>
+                                <li>Family and medical history (e.g., Family History of Kidney Disease).</li>
+                                <li>Symptoms and quality of life metrics (e.g., Fatigue, QualityOfLifeScore).</li>
+                                <li>Outcome variable: Diagnosis (0 = No CKD, 1 = CKD).</li>
+                            </ul>
+                            <p class="card-text">
+                                The dataset is ideal for machine learning models to predict CKD risk and understand contributing factors.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Column Descriptions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Column Descriptions</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Column Name</th>
+                                            <th>Description</th>
+                                            <th>Data Type</th>
+                                            <th>Example Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>PatientID</td><td>Unique identifier for each patient</td><td>Integer</td><td>1</td></tr>
+                                        <tr><td>Age</td><td>Patient's age in years</td><td>Integer</td><td>71</td></tr>
+                                        <tr><td>Gender</td><td>0 = Male, 1 = Female</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>Ethnicity</td><td>Ethnic group (0-3)</td><td>Categorical</td><td>0</td></tr>
+                                        <tr><td>SocioeconomicStatus</td><td>Socioeconomic level (0-2)</td><td>Categorical</td><td>0</td></tr>
+                                        <tr><td>EducationLevel</td><td>Education level (0-3)</td><td>Categorical</td><td>2</td></tr>
+                                        <tr><td>BMI</td><td>Body Mass Index (kg/m²)</td><td>Float</td><td>31.07</td></tr>
+                                        <tr><td>Smoking</td><td>Smoking status (0 = No, 1 = Yes)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>AlcoholConsumption</td><td>Alcohol consumption level</td><td>Float</td><td>5.13</td></tr>
+                                        <tr><td>PhysicalActivity</td><td>Physical activity level</td><td>Float</td><td>1.68</td></tr>
+                                        <tr><td>DietQuality</td><td>Diet quality score</td><td>Float</td><td>0.24</td></tr>
+                                        <tr><td>SleepQuality</td><td>Sleep quality score</td><td>Float</td><td>4.08</td></tr>
+                                        <tr><td>FamilyHistoryKidneyDisease</td><td>Family history of kidney disease (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>FamilyHistoryHypertension</td><td>Family history of hypertension (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>FamilyHistoryDiabetes</td><td>Family history of diabetes (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>PreviousAcuteKidneyInjury</td><td>History of acute kidney injury (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>UrinaryTractInfections</td><td>History of UTIs (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>SystolicBP</td><td>Systolic blood pressure (mmHg)</td><td>Integer</td><td>113</td></tr>
+                                        <tr><td>DiastolicBP</td><td>Diastolic blood pressure (mmHg)</td><td>Integer</td><td>83</td></tr>
+                                        <tr><td>FastingBloodSugar</td><td>Fasting blood sugar (mg/dL)</td><td>Float</td><td>72.51</td></tr>
+                                        <tr><td>HbA1c</td><td>Glycated hemoglobin (%)</td><td>Float</td><td>9.21</td></tr>
+                                        <tr><td>SerumCreatinine</td><td>Serum creatinine (mg/dL)</td><td>Float</td><td>4.96</td></tr>
+                                        <tr><td>BUNLevels</td><td>Blood urea nitrogen (mg/dL)</td><td>Float</td><td>25.61</td></tr>
+                                        <tr><td>GFR</td><td>Glomerular filtration rate (mL/min)</td><td>Float</td><td>45.70</td></tr>
+                                        <tr><td>ProteinInUrine</td><td>Proteinuria level</td><td>Float</td><td>0.74</td></tr>
+                                        <tr><td>ACR</td><td>Albumin-to-creatinine ratio</td><td>Float</td><td>123.85</td></tr>
+                                        <tr><td>SerumElectrolytesSodium</td><td>Sodium levels (mEq/L)</td><td>Float</td><td>137.65</td></tr>
+                                        <tr><td>SerumElectrolytesPotassium</td><td>Potassium levels (mEq/L)</td><td>Float</td><td>3.63</td></tr>
+                                        <tr><td>SerumElectrolytesCalcium</td><td>Calcium levels (mg/dL)</td><td>Float</td><td>10.31</td></tr>
+                                        <tr><td>SerumElectrolytesPhosphorus</td><td>Phosphorus levels (mg/dL)</td><td>Float</td><td>3.15</td></tr>
+                                        <tr><td>HemoglobinLevels</td><td>Hemoglobin (g/dL)</td><td>Float</td><td>16.11</td></tr>
+                                        <tr><td>CholesterolTotal</td><td>Total cholesterol (mg/dL)</td><td>Float</td><td>207.73</td></tr>
+                                        <tr><td>CholesterolLDL</td><td>LDL cholesterol (mg/dL)</td><td>Float</td><td>85.86</td></tr>
+                                        <tr><td>CholesterolHDL</td><td>HDL cholesterol (mg/dL)</td><td>Float</td><td>21.97</td></tr>
+                                        <tr><td>CholesterolTriglycerides</td><td>Triglycerides (mg/dL)</td><td>Float</td><td>212.10</td></tr>
+                                        <tr><td>ACEInhibitors</td><td>Use of ACE inhibitors (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>Diuretics</td><td>Use of diuretics (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>NSAIDsUse</td><td>Use of NSAIDs</td><td>Float</td><td>4.56</td></tr>
+                                        <tr><td>Statins</td><td>Use of statins (0/1)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>AntidiabeticMedications</td><td>Use of antidiabetic meds (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>Edema</td><td>Presence of edema (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>FatigueLevels</td><td>Fatigue severity</td><td>Float</td><td>3.56</td></tr>
+                                        <tr><td>NauseaVomiting</td><td>Nausea/vomiting severity</td><td>Float</td><td>6.99</td></tr>
+                                        <tr><td>MuscleCramps</td><td>Muscle cramp severity</td><td>Float</td><td>4.52</td></tr>
+                                        <tr><td>Itching</td><td>Itching severity</td><td>Float</td><td>7.56</td></tr>
+                                        <tr><td>QualityOfLifeScore</td><td>Quality of life score</td><td>Float</td><td>76.08</td></tr>
+                                        <tr><td>HeavyMetalsExposure</td><td>Exposure to heavy metals (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>OccupationalExposureChemicals</td><td>Chemical exposure (0/1)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>WaterQuality</td><td>Water quality score</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>MedicalCheckupsFrequency</td><td>Frequency of checkups</td><td>Float</td><td>1.02</td></tr>
+                                        <tr><td>MedicationAdherence</td><td>Adherence to medication</td><td>Float</td><td>4.97</td></tr>
+                                        <tr><td>HealthLiteracy</td><td>Health literacy score</td><td>Float</td><td>9.87</td></tr>
+                                        <tr><td>Diagnosis</td><td>CKD diagnosis (0 = No, 1 = Yes)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>DoctorInCharge</td><td>Doctor handling case</td><td>String</td><td>Confidential</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Visualizations</h2>
+                        </div>
+                        <div class="card-body">
+                            <!-- Age Distribution -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Age Distribution of Patients</h3>
+                                <p class="text-muted mb-3">This chart shows the distribution of patient ages, binned into 10-year intervals.</p>
+                                <div class="chart-container">
+                                    <canvas id="ageDistributionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- CKD Prevalence by Gender -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">CKD Prevalence by Gender</h3>
+                                <p class="text-muted mb-3">This chart compares CKD diagnosis rates between male and female patients.</p>
+                                <div class="chart-container">
+                                    <canvas id="genderCKDChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- GFR vs. Serum Creatinine -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">GFR vs. Serum Creatinine</h3>
+                                <p class="text-muted mb-3">This scatter plot explores the relationship between GFR and Serum Creatinine, colored by CKD diagnosis.</p>
+                                <div class="chart-container">
+                                    <canvas id="gfrCreatinineChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Risk Factors -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Prevalence of Risk Factors</h3>
+                                <p class="text-muted mb-3">This chart shows the prevalence of key risk factors for CKD.</p>
+                                <div class="chart-container">
+                                    <canvas id="riskFactorsChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Quality of Life by Age -->
+                            <div class="mb-3">
+                                <h3 class="h5 fw-bold mb-2">Quality of Life Score by Age</h3>
+                                <p class="text-muted mb-3">This line chart shows average Quality of Life scores across age groups.</p>
+                                <div class="chart-container">
+                                    <canvas id="qolAgeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Insights -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Key Insights</h2>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item insight-item">The dataset shows a significant number of CKD cases in younger patients (age < 40), which is unexpected as CKD is typically associated with older age. For example, PatientID 2 (age 34) has a CKD diagnosis.</li>
+                                <li class="list-group-item insight-item">Low GFR (<60 mL/min) and high Serum Creatinine (>1.2 mg/dL) are strongly associated with CKD, as seen in the scatter plot.</li>
+                                <li class="list-group-item insight-item">Family history of hypertension and diabetes are prevalent risk factors, suggesting genetic predispositions play a role.</li>
+                                <li class="list-group-item insight-item">Quality of Life scores tend to decrease with age, particularly for CKD patients, highlighting the disease's impact.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Conclusion -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Conclusion</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                The Chronic Kidney Disease dataset provides a rich resource for understanding CKD risk factors and developing predictive models. Its comprehensive attributes, from clinical measurements to lifestyle factors, enable detailed analysis of disease mechanisms. The visualizations reveal key patterns, such as the surprising prevalence of CKD in younger patients and the strong correlation between GFR and CKD diagnosis. This dataset is invaluable for researchers and clinicians aiming to improve early detection and management of CKD.
+                            </p>
+                        </div>
+                    </div>
+                     <!-- Back to Home Button -->
+                    <a href="${homeUrl}" class="back-home-btn">Back to Home</a>
+                </div>
+            `;
+
+            // Render all charts
+            renderAgeDistributionChart(ageData);
+            renderGenderCKDChart(genderData);
+            renderGFRvsCreatinineChart(gfrCreatinineData);
+            renderRiskFactorsChart(riskFactorData);
+            renderQoLbyAgeChart(qolData);
+        }
+    </script>
+    {% endverbatim %}
+</body>
+</html>

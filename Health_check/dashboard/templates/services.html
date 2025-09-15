@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Services - Health Check AI{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 glass-card text-center">
+                <h1 class="display-4 fw-bold mb-4 text text-black">Our Predictive Services</h1>
+                <p class="lead text text-black">Advanced AI-powered disease prediction for better health outcomes</p>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 glass-card text-center">
+                <div class="container">
+                    <h1 class="display-4 fw-bold mb-4 text text-black">
+                        <a href="{% url 'dashboard:prediction' %}" class="btn btn-info btn-lg px-5 py-3">Let's Go to Prediction Page</a>
+                    </h1>
+                </div>
+                <p class="lead text text-black">This will take you to the predition page where ML prediction models are integrated</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="container my-5">
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-heartbeat text-white fs-2"></i> {% endcomment %}
+                    </div>
+                    <h3 class="mb-0">AIDS Disease Prediction</h3>
+                </div>
+                <p>Our AI analyzes your risk factors for AIDS disease, including blood pressure, prevention levels, lifestyle factors, and family history to predict hiv issues before they become critical.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> HIV disease risk assessment</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Stroke probability analysis</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Personalized prevention plan</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-dna text-white fs-2"></i> {% endcomment %}
+                    </div>
+                    <h3 class="mb-0">Diabetes Prediction</h3>
+                </div>
+                <p>Early detection of diabetes risk through analysis of blood sugar levels, BMI, physical activity, and other metabolic markers to help prevent or manage the condition effectively.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Type 2 diabetes risk score</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Pre-diabetes detection</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Lifestyle recommendations</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-lungs text-white fs-2"></i> {% endcomment %}
+                    </div>
+            
+               <h3 class="mb-0">Heart Disease Prediction</h3>
+            </div>
+                <p>Advanced analysis of cardiovascular health, clinical biomarkers, and risk factors to predict heart disease and support early intervention.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Cardiovascular health assessment</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Early heart disease detection</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Risk factor analysis</li>
+                </ul>
+            </div>
+
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-brain text-white fs-2"></i> {% endcomment %}
+                    </div>
+<h3 class="mb-0">Breast Cancer Prediction</h3>
+            </div>
+                <p>Advanced analysis of tumor characteristics, clinical biomarkers, and risk factors to predict breast cancer and support early intervention.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Tumor characteristic assessment</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Early breast cancer detection</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Risk factor analysis</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+        <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-lungs text-white fs-2"></i> {% endcomment %}
+                    </div>
+            
+           <h3 class="mb-0">Chronic Kidney Disease Prediction</h3>
+            </div>
+                <p>Advanced analysis of kidney function, clinical biomarkers, and risk factors to predict chronic kidney disease and support early intervention.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Kidney function assessment</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Early CKD detection</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Risk factor analysis</li>
+                </ul>
+            </div>
+
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="glass-card h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-gradient p-3 rounded me-3">
+                        {% comment %} <i class="fas fa-brain text-white fs-2"></i> {% endcomment %}
+                    </div>
+                     <h3 class="mb-0">Liver Disease Prediction</h3>
+            </div>
+                <p>Advanced analysis of liver function, clinical biomarkers, and risk factors to predict liver diseases such as hepatitis, cirrhosis, and fatty liver disease.</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i> Liver function assessment</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Early liver disease detection</li>
+                    <li><i class="fas fa-check text-success me-2"></i> Risk factor analysis</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="container my-5">
+    <div class="glass-card p-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">How It Works</h2>
+            <p class="lead">Simple steps to get your health predictions</p>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <h3 class="mb-0">1</h3>
+                    </div>
+                    <h4>Sign Up</h4>
+                    <p>Create your secure account and complete your health profile.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <h3 class="mb-0">2</h3>
+                    </div>
+                    <h4>Enter Data</h4>
+                    <p>Provide your symptoms, medical history, and any test results.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <h3 class="mb-0">3</h3>
+                    </div>
+                    <h4>Get Results</h4>
+                    <p>Receive your personalized health predictions and recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

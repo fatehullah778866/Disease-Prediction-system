@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Health Check AI{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 glass-card">
+                <h1 class="display-4 fw-bold mb-4" style='color:black'>Revolutionizing Healthcare with AI</h1>
+                <p class="lead mb-5" style="color:black">Health Check AI provides accurate multi-disease predictions using advanced machine learning algorithms to help you take control of your health.</p>
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                    <a href="{% url 'dashboard:services' %}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
+                    <a href="{% url 'dashboard:about' %}" class="btn btn-outline-light btn-lg px-4 text-white btn-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-4 mb-4">
+            <div class="glass-card h-100">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI-Powered</h3>
+                <p>Our advanced machine learning models provide accurate predictions for multiple diseases based on your symptoms and health data.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="glass-card h-100">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Secure & Private</h3>
+                <p>Your health data is encrypted and protected with the highest security standards. We prioritize your privacy.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="glass-card h-100">
+                <div class="feature-icon">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3>Doctor Verified</h3>
+                <p>Our predictions are validated by medical professionals to ensure reliability and accuracy.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="container my-5">
+    <div class="glass-card text-center p-5">
+        <h2 class="mb-4">Ready to Take Control of Your Health?</h2>
+        <p class="lead mb-4">Sign up now and get instant access to our multi-disease prediction system.</p>
+        <a href="{% url 'accounts:signup' %}" class="btn btn-success btn-lg px-5">Sign Up Free</a>
+    </div>
+</section>
+{% endblock %}

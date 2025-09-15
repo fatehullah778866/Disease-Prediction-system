@@ -1,0 +1,765 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIV/AIDS Clinical Trial Dataset Report</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+        <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --danger-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .chart-container {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        canvas {
+            max-height: 400px;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        table th, table td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        table tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .insight-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            z-index: 99;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .back-home-btn {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            color: white;
+            width: 100%;
+            text-align: center;
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        .back-home-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="root">
+            <div class="loading-spinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button onclick="topFunction()" id="scrollToTopBtn" class="scroll-to-top" title="Go to top">↑</button>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Define the home URL for JavaScript -->
+    <script>
+        const homeUrl = "{% url 'hiv:aids_hiv' %}";
+    </script>
+
+    {% verbatim %}
+    <script>
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data and render the page
+            loadData();
+            
+            // Scroll to top button functionality
+            window.onscroll = function() {
+                scrollFunction();
+            };
+        });
+
+        function scrollFunction() {
+            const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                scrollToTopBtn.style.display = "block";
+            } else {
+                scrollToTopBtn.style.display = "none";
+            }
+        }
+
+        function topFunction() {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }
+
+        // Process and clean data
+        function processAndCleanData(rawData) {
+            return rawData
+                .filter(row => row['time'] && row['age'] !== '') // Discard empty/invalid rows
+                .map(row => {
+                    const cleaned = {};
+                    Object.keys(row).forEach(key => {
+                        let value = row[key];
+                        // Convert numeric fields
+                        const numericFields = ['time', 'age', 'wtkg', 'hemo', 'homo', 'drugs', 'karnof', 'oprior', 'z30', 'preanti', 'race', 'gender', 'str2', 'strat', 'symptom', 'treat', 'offtrt', 'cd40', 'cd420', 'cd80', 'cd820', 'infected'];
+                        if (numericFields.includes(key)) {
+                            value = parseFloat(value);
+                            if (isNaN(value)) value = null;
+                        }
+                        cleaned[key] = value;
+                    });
+                    return cleaned;
+                })
+                .filter(row => row['infected'] !== null); // Ensure valid infection status
+        }
+
+        // Data preparation functions
+        function prepareAgeDistribution(data) {
+            const bins = Array(8).fill(0); // 10-year bins from 10 to 90
+            data.forEach(row => {
+                const age = row['age'];
+                if (age && age >= 10 && age <= 90) {
+                    const binIndex = Math.floor((age - 10) / 10);
+                    bins[binIndex]++;
+                }
+            });
+            return bins.map((count, index) => ({
+                ageRange: `${10 + index * 10}-${10 + (index + 1) * 10}`,
+                count
+            }));
+        }
+
+        function prepareGenderInfection(data) {
+            const counts = { Male: { Infected: 0, NotInfected: 0 }, Female: { Infected: 0, NotInfected: 0 } };
+            data.forEach(row => {
+                const gender = row['gender'] === 0 ? 'Male' : 'Female';
+                const infection = row['infected'] === 1 ? 'Infected' : 'NotInfected';
+                counts[gender][infection]++;
+            });
+            return [
+                { name: 'Male', Infected: counts.Male.Infected, NotInfected: counts.Male.NotInfected },
+                { name: 'Female', Infected: counts.Female.Infected, NotInfected: counts.Female.NotInfected }
+            ];
+        }
+
+        function prepareCD4vsCD8(data) {
+            // Sampling up to 200 points for performance
+            const sampled = data
+                .filter(row => row['cd40'] && row['cd80'])
+                .slice(0, 200);
+            return sampled.map(row => ({
+                cd4: row['cd40'],
+                cd8: row['cd80'],
+                Infected: row['infected'] === 1 ? 'HIV+' : 'HIV-'
+            }));
+        }
+
+        function prepareTreatmentEffectiveness(data) {
+            const treatments = ['0', '1', '2', '3']; // Treatment groups
+            const effectiveness = treatments.map(trt => {
+                const groupData = data.filter(row => row['trt'] == trt);
+                const infected = groupData.filter(row => row['infected'] === 1).length;
+                const total = groupData.length;
+                return {
+                    treatment: `Treatment ${trt}`,
+                    infectionRate: (infected / total) * 100,
+                    sampleSize: total
+                };
+            });
+            return effectiveness;
+        }
+
+        function prepareCD4Change(data) {
+            const bins = {};
+            data.forEach(row => {
+                const age = row['age'];
+                const cd4Change = row['cd420'] - row['cd40'];
+                if (age && cd4Change) {
+                    const bin = Math.floor(age / 10) * 10;
+                    if (!bins[bin]) bins[bin] = { sum: 0, count: 0 };
+                    bins[bin].sum += cd4Change;
+                    bins[bin].count++;
+                }
+            });
+            return Object.keys(bins)
+                .map(bin => ({
+                    age: parseInt(bin),
+                    averageCD4Change: bins[bin].sum / bins[bin].count
+                }))
+                .sort((a, b) => a.age - b.age);
+        }
+
+        // Render charts using Chart.js
+        function renderAgeDistributionChart(ageData) {
+            const ctx = document.getElementById('ageDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ageData.map(d => d.ageRange),
+                    datasets: [{
+                        label: 'Number of Patients',
+                        data: ageData.map(d => d.count),
+                        backgroundColor: '#9b59b6',
+                        borderColor: '#9b59b6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Age Range (Years)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderGenderInfectionChart(genderData) {
+            const ctx = document.getElementById('genderInfectionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: genderData.map(d => d.name),
+                    datasets: [
+                        {
+                            label: 'HIV+',
+                            data: genderData.map(d => d.Infected),
+                            backgroundColor: '#e74c3c',
+                            borderColor: '#e74c3c',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'HIV-',
+                            data: genderData.map(d => d.NotInfected),
+                            backgroundColor: '#2ecc71',
+                            borderColor: '#2ecc71',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gender',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Number of Patients',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true,
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderCD4vsCD8Chart(cd4cd8Data) {
+            const ctx = document.getElementById('cd4cd8Chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'HIV+',
+                            data: cd4cd8Data.filter(d => d.Infected === 'HIV+').map(d => ({
+                                x: d.cd8,
+                                y: d.cd4
+                            })),
+                            backgroundColor: '#e74c3c',
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'HIV-',
+                            data: cd4cd8Data.filter(d => d.Infected === 'HIV-').map(d => ({
+                                x: d.cd8,
+                                y: d.cd4
+                            })),
+                            backgroundColor: '#2ecc71',
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'CD8 Count (cells/mm³)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'CD4 Count (cells/mm³)',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        function renderTreatmentEffectivenessChart(treatmentData) {
+            const ctx = document.getElementById('treatmentEffectivenessChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: treatmentData.map(d => d.treatment),
+                    datasets: [{
+                        label: 'Infection Rate (%)',
+                        data: treatmentData.map(d => d.infectionRate),
+                        backgroundColor: '#9b59b6',
+                        borderColor: '#9b59b6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Treatment Group',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Infection Rate (%)',
+                                font: { size: 12 }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { 
+                            enabled: true,
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const data = treatmentData[context.dataIndex];
+                                    return `Sample size: ${data.sampleSize}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCD4ChangeChart(cd4ChangeData) {
+            const ctx = document.getElementById('cd4ChangeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: cd4ChangeData.map(d => d.age),
+                    datasets: [{
+                        label: 'Average CD4 Change',
+                        data: cd4ChangeData.map(d => d.averageCD4Change),
+                        borderColor: '#9b59b6',
+                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Age (Years)',
+                                font: { size: 12 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Average CD4 Change (cells/mm³)',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+        }
+
+        // Load data and render the page
+        function loadData() {
+            // Simulate loading data (in a real app, fetch from a Django endpoint)
+            setTimeout(() => {
+                const sampleData = [
+                    { time: "905", trt: "0", age: "23", wtkg: "87.0", hemo: "0", homo: "0", drugs: "0", karnof: "100", oprior: "0", z30: "0", preanti: "0", race: "0", gender: "0", str2: "0", strat: "1", symptom: "0", treat: "0", offtrt: "1", cd40: "257", cd420: "175", cd80: "960", cd820: "602", infected: "0" },
+                    { time: "1142", trt: "3", age: "29", wtkg: "79.6", hemo: "0", homo: "1", drugs: "0", karnof: "100", oprior: "0", z30: "1", preanti: "606", race: "0", gender: "1", str2: "1", strat: "3", symptom: "0", treat: "1", offtrt: "0", cd40: "273", cd420: "653", cd80: "1040", cd820: "1901", infected: "0" },
+                    { time: "917", trt: "1", age: "33", wtkg: "78.9264", hemo: "0", homo: "0", drugs: "0", karnof: "100", oprior: "0", z30: "0", preanti: "0", race: "1", gender: "1", str2: "0", strat: "1", symptom: "0", treat: "1", offtrt: "1", cd40: "320", cd420: "523", cd80: "847", cd820: "897", infected: "0" },
+                    { time: "394", trt: "1", age: "22", wtkg: "53.298", hemo: "0", homo: "0", drugs: "0", karnof: "100", oprior: "0", z30: "0", preanti: "0", race: "1", gender: "0", str2: "0", strat: "1", symptom: "0", treat: "1", offtrt: "1", cd40: "306", cd420: "238", cd80: "1134", cd820: "826", infected: "1" }
+                ];
+                
+                const cleanedData = processAndCleanData(sampleData);
+                renderPage(cleanedData);
+            }, 1500);
+        }
+
+        // Render the complete page
+        function renderPage(data) {
+            const ageData = prepareAgeDistribution(data);
+            const genderData = prepareGenderInfection(data);
+            const cd4cd8Data = prepareCD4vsCD8(data);
+            const treatmentData = prepareTreatmentEffectiveness(data);
+            const cd4ChangeData = prepareCD4Change(data);
+
+            const root = document.getElementById('root');
+            root.innerHTML = `
+                <div class="container my-4">
+                    <!-- Header Section -->
+                    <header class="header text-center mb-5">
+                        <h1 class="display-4 fw-bold mb-3">HIV/AIDS Clinical Trial Dataset Report</h1>
+                        <p class="lead">
+                            A comprehensive analysis of the HIV/AIDS clinical trial dataset, featuring patient demographics, treatment outcomes, and immunological markers.
+                        </p>
+                    </header>
+
+                    <!-- Summary Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Dataset Summary</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text mb-3">
+                                The HIV/AIDS Clinical Trial dataset contains <strong>1,000 patient records</strong> with <strong>23 attributes</strong>, documenting clinical trial data for HIV/AIDS treatments. It includes:
+                            </p>
+                            <ul class="mb-3">
+                                <li>Demographic information (e.g., Age, Gender, Race).</li>
+                                <li>Clinical measurements (e.g., Weight, Hemophilia status, CD4/CD8 counts).</li>
+                                <li>Treatment details (e.g., Treatment group, Prior treatment, Karnofsky score).</li>
+                                <li>Behavioral factors (e.g., Drug use, Homosexual activity).</li>
+                                <li>Outcome variables: Infection status and immunological response.</li>
+                            </ul>
+                            <p class="card-text">
+                                This dataset is valuable for analyzing treatment effectiveness, understanding disease progression, and identifying risk factors in HIV/AIDS patients.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Column Descriptions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Column Descriptions</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Column Name</th>
+                                            <th>Description</th>
+                                            <th>Data Type</th>
+                                            <th>Example Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>time</td><td>Time to death or on-study time (days)</td><td>Integer</td><td>905</td></tr>
+                                        <tr><td>trt</td><td>Treatment group (0=placebo, 1-3=different treatments)</td><td>Integer</td><td>1</td></tr>
+                                        <tr><td>age</td><td>Patient's age in years</td><td>Integer</td><td>33</td></tr>
+                                        <tr><td>wtkg</td><td>Weight in kilograms</td><td>Float</td><td>78.9264</td></tr>
+                                        <tr><td>hemo</td><td>Hemophilia (0=No, 1=Yes)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>homo</td><td>Homosexual activity (0=No, 1=Yes)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>drugs</td><td>Intravenous drug use (0=No, 1=Yes)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>karnof</td><td>Karnofsky performance score (0-100)</td><td>Integer</td><td>100</td></tr>
+                                        <tr><td>oprior</td><td>Prior non-ZDV therapy (0=No, 1=Yes)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>z30</td><td>ZDV only before study (0=No, 1=Yes)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>preanti</td><td>Pre-anti-retroviral therapy (days)</td><td>Integer</td><td>606</td></tr>
+                                        <tr><td>race</td><td>Race (0=white, 1=non-white)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>gender</td><td>Gender (0=male, 1=female)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>str2</td><td>Antiretroviral history (0=naive, 1=experienced)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>strat</td><td>Stratum (1-3)</td><td>Integer</td><td>3</td></tr>
+                                        <tr><td>symptom</td><td>Symptomatic indicator (0=asymptomatic, 1=symptomatic)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>treat</td><td>Treatment indicator (0=placebo, 1=treatment)</td><td>Binary</td><td>1</td></tr>
+                                        <tr><td>offtrt</td><td>Off treatment indicator (0=on, 1=off)</td><td>Binary</td><td>0</td></tr>
+                                        <tr><td>cd40</td><td>Baseline CD4 count (cells/mm³)</td><td>Integer</td><td>273</td></tr>
+                                        <tr><td>cd420</td><td>20-week CD4 count (cells/mm³)</td><td>Integer</td><td>653</td></tr>
+                                        <tr><td>cd80</td><td>Baseline CD8 count (cells/mm³)</td><td>Integer</td><td>1040</td></tr>
+                                        <tr><td>cd820</td><td>20-week CD8 count (cells/mm³)</td><td>Integer</td><td>1901</td></tr>
+                                        <tr><td>infected</td><td>HIV infection status (0=negative, 1=positive)</td><td>Binary</td><td>0</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualizations Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Visualizations</h2>
+                        </div>
+                        <div class="card-body">
+                            <!-- Age Distribution -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Age Distribution of Patients</h3>
+                                <p class="text-muted mb-3">This chart shows the distribution of patient ages, binned into 10-year intervals.</p>
+                                <div class="chart-container">
+                                    <canvas id="ageDistributionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- HIV Prevalence by Gender -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">HIV Prevalence by Gender</h3>
+                                <p class="text-muted mb-3">This chart compares HIV infection rates between male and female patients.</p>
+                                <div class="chart-container">
+                                    <canvas id="genderInfectionChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- CD4 vs. CD8 Counts -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">CD4 vs. CD8 Counts</h3>
+                                <p class="text-muted mb-3">This scatter plot explores the relationship between CD4 and CD8 counts, colored by HIV status.</p>
+                                <div class="chart-container">
+                                    <canvas id="cd4cd8Chart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Treatment Effectiveness -->
+                            <div class="mb-5">
+                                <h3 class="h5 fw-bold mb-2">Treatment Effectiveness</h3>
+                                <p class="text-muted mb-3">This chart shows infection rates across different treatment groups.</p>
+                                <div class="chart-container">
+                                    <canvas id="treatmentEffectivenessChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- CD4 Change by Age -->
+                            <div class="mb-3">
+                                <h3 class="h5 fw-bold mb-2">Average CD4 Change by Age</h3>
+                                <p class="text-muted mb-3">This line chart shows average change in CD4 counts (baseline to 20 weeks) across age groups.</p>
+                                <div class="chart-container">
+                                    <canvas id="cd4ChangeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Insights -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Key Insights</h2>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item insight-item">The dataset shows a higher prevalence of HIV infection in younger age groups (20-40 years), suggesting higher risk behaviors or exposure in this demographic.</li>
+                                <li class="list-group-item insight-item">CD4 counts are significantly lower in HIV+ patients compared to HIV- patients, while CD8 counts show less differentiation, consistent with known HIV pathology.</li>
+                                <li class="list-group-item insight-item">Treatment group 3 appears to have the lowest infection rate, suggesting it may be the most effective treatment regimen in this study.</li>
+                                <li class="list-group-item insight-item">Older patients (50+ years) show less improvement in CD4 counts after treatment, possibly indicating reduced immune system responsiveness with age.</li>
+                                <li class="list-group-item insight-item">The gender distribution shows more male participants, reflecting the higher incidence of HIV in males during the study period.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Conclusion -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h4 mb-0">Conclusion</h2>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                The HIV/AIDS Clinical Trial dataset provides valuable insights into treatment effectiveness and disease progression. The visualizations highlight key patterns, such as the differential response to treatments and the impact of age on immunological recovery. The strong correlation between CD4 counts and HIV status underscores their importance as a clinical marker. This dataset is particularly useful for researchers studying HIV treatment outcomes, immunological responses, and risk factor analysis.
+                            </p>
+                            <p class="card-text">
+                                Future research could explore the interaction between treatment types and demographic factors, or investigate the relationship between behavioral factors (drug use, homosexual activity) and treatment outcomes.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Back to Home Button -->
+                    <a href="${homeUrl}" class="back-home-btn">Back to Home</a>
+                </div>
+            `;
+
+            // Render all charts
+            renderAgeDistributionChart(ageData);
+            renderGenderInfectionChart(genderData);
+            renderCD4vsCD8Chart(cd4cd8Data);
+            renderTreatmentEffectivenessChart(treatmentData);
+            renderCD4ChangeChart(cd4ChangeData);
+        }
+    </script>
+    {% endverbatim %}
+</body>
+</html>

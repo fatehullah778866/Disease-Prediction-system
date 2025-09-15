@@ -1,0 +1,489 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liver Disease Risk Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --danger-color: #e63946;
+            --success-color: #2a9d8f;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+            transform: translateY(-5px);
+        }
+        
+        .form-control, .form-select {
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 0.25rem rgba(74, 111, 165, 0.25);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--dark-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #495057;
+            transform: translateY(-2px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 0 0 15px 15px;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(74, 111, 165, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .info-section {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 8px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        .is-invalid {
+            border-color: var(--danger-color) !important;
+        }
+        
+        .invalid-feedback {
+            color: var(--danger-color);
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+        
+        .form-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3"><i class="fas fa-liver me-2"></i> Liver Disease Risk Prediction</h1>
+            <p class="lead">Assess your risk factors and get an instant prediction</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <!-- Information Section -->
+                <div class="info-section glass-card mb-4">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="feature-icon">
+                                <i class="fas fa-shield-virus"></i>
+                            </div>
+                            <h5>Early Detection</h5>
+                            <p class="text-muted">Identify potential risks before symptoms appear</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h5>Clinical Accuracy</h5>
+                            <p class="text-muted">Powered by machine learning algorithms</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="feature-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h5>Data Privacy</h5>
+                            <p class="text-muted">Your information is always secure</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Prediction Form -->
+                <div class="glass-card p-4 p-md-5">
+                    <h2 class="text-center mb-4">Risk Assessment Form</h2>
+                    <p class="text-muted text-center mb-4">Please provide accurate information for the most reliable prediction</p>
+                    
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    <form id="predictionForm" method="POST" action="{% url 'liver:predict_liver' %}" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="age" name="age" min="1" max="120" required
+                                       placeholder="Enter your age in years">
+                                <div class="form-text">Normal range: 1-120 years</div>
+                                <div class="invalid-feedback">Please enter a valid age between 1 and 120 years.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="" selected disabled>Select Gender</option>
+                                    <option value="1">Male</option>
+                                    <option value="0">Female</option>
+                                </select>
+                                <div class="form-text">Select your biological sex</div>
+                                <div class="invalid-feedback">Please select your gender.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="total_bilirubin" class="form-label">Total Bilirubin (mg/dL) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.1" class="form-control" id="total_bilirubin" name="total_bilirubin" 
+                                       min="0" max="30" required placeholder="e.g., 0.7">
+                                <div class="form-text">Normal range: 0.3-1.2 mg/dL</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 30 mg/dL.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="direct_bilirubin" class="form-label">Direct Bilirubin (mg/dL) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.1" class="form-control" id="direct_bilirubin" name="direct_bilirubin" 
+                                       min="0" max="15" required placeholder="e.g., 0.2">
+                                <div class="form-text">Normal range: 0.1-0.4 mg/dL</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 15 mg/dL.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="alkaline_phosphotase" class="form-label">Alkaline Phosphotase (IU/L) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="alkaline_phosphotase" name="alkaline_phosphotase" 
+                                       min="0" max="2000" required placeholder="e.g., 187">
+                                <div class="form-text">Normal range: 44-147 IU/L</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 2000 IU/L.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="alamine_aminotransferase" class="form-label">Alanine Aminotransferase (IU/L) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="alamine_aminotransferase" name="alamine_aminotransferase" 
+                                       min="0" max="2000" required placeholder="e.g., 32">
+                                <div class="form-text">Normal range: 7-56 IU/L</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 2000 IU/L.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="aspartate_aminotransferase" class="form-label">Aspartate Aminotransferase (IU/L) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="aspartate_aminotransferase" name="aspartate_aminotransferase" 
+                                       min="0" max="2000" required placeholder="e.g., 25">
+                                <div class="form-text">Normal range: 5-40 IU/L</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 2000 IU/L.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="total_protiens" class="form-label">Total Proteins (g/dL) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.1" class="form-control" id="total_protiens" name="total_protiens" 
+                                       min="0" max="15" required placeholder="e.g., 7.2">
+                                <div class="form-text">Normal range: 6.0-8.3 g/dL</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 15 g/dL.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="albumin" class="form-label">Albumin (g/dL) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.1" class="form-control" id="albumin" name="albumin" 
+                                       min="0" max="10" required placeholder="e.g., 4.0">
+                                <div class="form-text">Normal range: 3.5-5.0 g/dL</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 10 g/dL.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="albumin_and_globulin_ratio" class="form-label">Albumin and Globulin Ratio <span class="text-danger">*</span></label>
+                                <input type="number" step="0.1" class="form-control" id="albumin_and_globulin_ratio" name="albumin_and_globulin_ratio" 
+                                       min="0" max="5" required placeholder="e.g., 1.2">
+                                <div class="form-text">Normal range: 0.8-2.0</div>
+                                <div class="invalid-feedback">Please enter a value between 0 and 5.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-4 d-md-flex justify-content-md-center gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-calculator me-2"></i> Calculate Risk
+                            </button>
+                            <a href="{% url 'liver:details' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-info-circle me-2"></i> Dataset Details
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Disclaimer -->
+                <div class="mt-4 text-center text-muted small">
+                    <p>This tool is for informational purposes only and does not replace professional medical advice. 
+                    Always consult with a healthcare provider for diagnosis and treatment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Show loading overlay on form submission
+            $('#predictionForm').on('submit', function(e) {
+                // First validate the form
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('was-validated');
+                    
+                    // Scroll to the first invalid field
+                    $('html, body').animate({
+                        scrollTop: $(".is-invalid").first().offset().top - 100
+                    }, 500);
+                    
+                    return;
+                }
+                
+                // Validate medical ranges before submission
+                if (!validateMedicalRanges()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('was-validated');
+                    
+                    // Scroll to the first invalid field
+                    $('html, body').animate({
+                        scrollTop: $(".is-invalid").first().offset().top - 100
+                    }, 500);
+                    
+                    return;
+                }
+                
+                $('#loadingOverlay').css('display', 'flex');
+            });
+
+            // Add custom validation for medical ranges
+            function validateMedicalRanges() {
+                let isValid = true;
+                
+                // Total Bilirubin validation (0-30 mg/dL)
+                const totalBilirubin = parseFloat($('#total_bilirubin').val());
+                if (isNaN(totalBilirubin)) {
+                    $('#total_bilirubin').addClass('is-invalid');
+                    isValid = false;
+                } else if (totalBilirubin < 0 || totalBilirubin > 30) {
+                    $('#total_bilirubin').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Direct Bilirubin validation (0-15 mg/dL)
+                const directBilirubin = parseFloat($('#direct_bilirubin').val());
+                if (isNaN(directBilirubin)) {
+                    $('#direct_bilirubin').addClass('is-invalid');
+                    isValid = false;
+                } else if (directBilirubin < 0 || directBilirubin > 15) {
+                    $('#direct_bilirubin').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Alkaline Phosphotase validation (0-2000 IU/L)
+                const alkalinePhosphotase = parseFloat($('#alkaline_phosphotase').val());
+                if (isNaN(alkalinePhosphotase)) {
+                    $('#alkaline_phosphotase').addClass('is-invalid');
+                    isValid = false;
+                } else if (alkalinePhosphotase < 0 || alkalinePhosphotase > 2000) {
+                    $('#alkaline_phosphotase').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Alamine Aminotransferase validation (0-2000 IU/L)
+                const alamineAminotransferase = parseFloat($('#alamine_aminotransferase').val());
+                if (isNaN(alamineAminotransferase)) {
+                    $('#alamine_aminotransferase').addClass('is-invalid');
+                    isValid = false;
+                } else if (alamineAminotransferase < 0 || alamineAminotransferase > 2000) {
+                    $('#alamine_aminotransferase').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Aspartate Aminotransferase validation (0-2000 IU/L)
+                const aspartateAminotransferase = parseFloat($('#aspartate_aminotransferase').val());
+                if (isNaN(aspartateAminotransferase)) {
+                    $('#aspartate_aminotransferase').addClass('is-invalid');
+                    isValid = false;
+                } else if (aspartateAminotransferase < 0 || aspartateAminotransferase > 2000) {
+                    $('#aspartate_aminotransferase').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Total Proteins validation (0-15 g/dL)
+                const totalProtiens = parseFloat($('#total_protiens').val());
+                if (isNaN(totalProtiens)) {
+                    $('#total_protiens').addClass('is-invalid');
+                    isValid = false;
+                } else if (totalProtiens < 0 || totalProtiens > 15) {
+                    $('#total_protiens').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Albumin validation (0-10 g/dL)
+                const albumin = parseFloat($('#albumin').val());
+                if (isNaN(albumin)) {
+                    $('#albumin').addClass('is-invalid');
+                    isValid = false;
+                } else if (albumin < 0 || albumin > 10) {
+                    $('#albumin').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Albumin and Globulin Ratio validation (0-5)
+                const albuminGlobulinRatio = parseFloat($('#albumin_and_globulin_ratio').val());
+                if (isNaN(albuminGlobulinRatio)) {
+                    $('#albumin_and_globulin_ratio').addClass('is-invalid');
+                    isValid = false;
+                } else if (albuminGlobulinRatio < 0 || albuminGlobulinRatio > 5) {
+                    $('#albumin_and_globulin_ratio').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+
+            // Real-time validation for medical ranges
+            $('input[type="number"]').on('input', function() {
+                const value = parseFloat($(this).val());
+                const min = parseFloat($(this).attr('min')) || 0;
+                const max = parseFloat($(this).attr('max')) || Infinity;
+                
+                if (isNaN(value) || value < min || value > max) {
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+
+            // Reset validation on focus
+            $('input, select').on('focus', function() {
+                $(this).removeClass('is-invalid');
+            });
+            
+            // Ensure direct bilirubin isn't higher than total bilirubin
+            $('#total_bilirubin, #direct_bilirubin').on('change', function() {
+                const total = parseFloat($('#total_bilirubin').val());
+                const direct = parseFloat($('#direct_bilirubin').val());
+                
+                if (!isNaN(total) && !isNaN(direct) && direct > total) {
+                    $('#direct_bilirubin').addClass('is-invalid');
+                    $('#direct_bilirubin').next('.invalid-feedback').text('Direct bilirubin cannot be higher than total bilirubin.');
+                } else {
+                    $('#direct_bilirubin').removeClass('is-invalid');
+                    $('#direct_bilirubin').next('.invalid-feedback').text('Please enter a value between 0 and 15 mg/dL.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
