@@ -206,8 +206,8 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 - **Author:** Fateh Ullah
-- **GitHub:** [yourusername](https://github.com/yourusername)
-- **Email:** your.email@example.com
+- **GitHub:** https://github.com/fatehullah778866
+- **Email:** fatehullah.dev@gmail.com
 
 For issues, suggestions, or contributions, please open an issue or contact via email.
 
@@ -217,11 +217,6 @@ For issues, suggestions, or contributions, please open an issue or contact via e
 - scikit-learn, pandas, numpy
 - Django Documentation
 - Open source contributors
-
----
-
-## Screenshots
-_Add screenshots of the dashboard, prediction forms, and results here._
 
 ---
 
